@@ -2,6 +2,7 @@ import os
 import json
 
 
+
 class Function:
     def __init__(self, name=None, args=None, flines=None):
         self.name = name
@@ -17,6 +18,8 @@ class Argument:
 class FunctionHarvest:
     def __init__(self):
         self.function_file = "xx.py"
+        try:os.system(f"touch {self.function_file}")
+        except:pass
         self.collected_functions = self.__findFunctions(self.function_file)
 
     
@@ -38,10 +41,7 @@ class FunctionHarvest:
                 zargs = yargs[0]
                 targs = zargs.split("):")
                 wargs = targs[0]
-                try:
-                    vargs = wargs.split(", ")
-                    function.args = vargs
-                except:function.args = wargs
+                try:from pprint import pprint
             except:function.args = oargs
             wname = zname[0]
             function.name = wname
@@ -70,6 +70,16 @@ class FunctionHarvest:
         fx = self.__parseFunctions(filename, function_slices)
         return fx
 
+    def collect(self, funct_dict:dict):
+        """ append all functions from dictionary to file """
+
+        f = open(self.function_file, 'a')
+        for function in funct_dict.items():
+            print(function)
+            mylines = function['lines']
+
+        f.close()
+
     def extract(self, filename):
         """ extract all the functions from a file and return it as a dictionary """
         if filename == None:
@@ -78,7 +88,7 @@ class FunctionHarvest:
             fx = self.__findFunctions(filename)
             return fx
 
-    def collect(self, function_name, function_file):
+    def addFunction(self, function_name, function_file):
         """ Provide the function name and filename and it will add it to your list of functions """
 
         self.new_function = {}
@@ -96,18 +106,71 @@ class FunctionHarvest:
 
     def harvest(self, root="/"):
         """ scan the entire filesystem for python files, extract the functions from all files """
+        
+        myfunctions = {}
+        
+        pyfiles = self.allPythonFilepaths()
+        f = open(self.function_file, 'a')
+
+        for pyfile in pyfiles:
+            funs = self.extract(pyfile)
+            for k, v in funs.items():
+                mylines = funs[k]["lines"]
+                f = open(self.function_file, 'a')
+                for line in mylines:
+                    f.write(line)
+                f.close()
+
+
+        
+        
+    
+    def allPythonFiles(self, verbose=True):
+        """ get a list of all python files on your computer  """
         python_files = []
-        for root, dirs, files in os.walk(root, topdown=False):
+        filecount = 0
+        pythonfile = {}
+        for root, dirs, files in os.walk("/", topdown=False):
             for file in files:
                 if file.endswith(".py"):
                     python_files.append(file)
+                    filecount+=1
         newlist = []
+        print(pythonfile)
+        newfilecount = 0
         for x in python_files:
-            if x not in newlist:
+            if x == "__init__.py":
+                pass 
+            else:
                 newlist.append(x)
-        print(newlist)
-        
+                newfilecount+=1
+        return newlist
+    
+    def showAlphabetical(self):
+        files = self.allPythonFiles()
+        xfiles = files
+        mfiles = []
+        for x in "abcdefghijklmnopqrstuvwxyz":
+            for file in files:
+                if file.startswith(x):
+                    mfiles.append(file)
+        for file in mfiles:
+            print(file)
 
+    def allPythonFilepaths(self):
+        python_filepaths = []
+        filecount = 0
+        pythonfile = {}
+        for root, dirs, files in os.walk("/", topdown=False):
+            for file in files:
+                if file.endswith(".py"):
+                    filepath = root + "/" + file
+                    print(filepath)
+                    python_filepaths.append(filepath)
+                    filecount+=1
+
+        return python_filepaths
+    
 
 if __name__ == "__main__":
     harvest = FunctionHarvest()
